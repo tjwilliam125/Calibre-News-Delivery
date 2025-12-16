@@ -19,15 +19,14 @@ jobs:
       run: |
         sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin
 
-    # STEP 3: Fetch Financial Times, Atlantic, Guardian, New Yorker
-    # Note: I have added --username and --password flags for the paywalled sites.
-    # You must add these secrets in GitHub Settings, or remove those flags if you don't have accounts.
+    # STEP 3: Fetch News
+    # Only "The New Yorker" has username/password flags now.
     - name: Fetch and Convert News
       run: |
-        ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet --username="${{ secrets.FT_USERNAME }}" --password="${{ secrets.FT_PASSWORD }}" || true
-        ebook-convert "The Atlantic.recipe" "Atlantic.epub" --output-profile=tablet --username="${{ secrets.ATLANTIC_USERNAME }}" --password="${{ secrets.ATLANTIC_PASSWORD }}" || true
-        ebook-convert "The New Yorker.recipe" "NewYorker.epub" --output-profile=tablet --username="${{ secrets.NY_USERNAME }}" --password="${{ secrets.NY_PASSWORD }}" || true
+        ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet || true
+        ebook-convert "The Atlantic.recipe" "Atlantic.epub" --output-profile=tablet || true
         ebook-convert "The Guardian and Observer.recipe" "Guardian.epub" --output-profile=tablet || true
+        ebook-convert "The New Yorker.recipe" "NewYorker.epub" --output-profile=tablet --username="${{ secrets.NY_USERNAME }}" --password="${{ secrets.NY_PASSWORD }}" || true
 
     # STEP 4: Upload All Epubs
     - name: Upload to Google Drive
