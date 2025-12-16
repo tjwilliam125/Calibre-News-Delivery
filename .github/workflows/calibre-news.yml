@@ -5,8 +5,6 @@ on:
   workflow_dispatch:
   schedule:
     # 6:00 AM CDT (UTC-5) = 11:00 UTC
-    # Note: When clocks fall back to CST (UTC-6), this will run at 5:00 AM local time
-    # unless you manually update this line to '0 12 * * *'.
     - cron: '0 11 * * *'
 
 jobs:
@@ -14,29 +12,28 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    # STEP 1: Check out the repo (so we can access any custom recipe files if you have them)
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # STEP 2: Install Calibre (Using the official Linux installer for the latest version)
     - name: Install Calibre
       run: |
         sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin
 
-    # STEP 3: Run ebook-convert
-    # Note: "BBC News" is a built-in recipe. 
-    # If you use a custom .recipe file, commit it to your repo and reference it like "./my_recipe.recipe"
+    # STEP 3: Fetch Financial Times, Atlantic, Guardian, New Yorker
+    # Note: I have added --username and --password flags for the paywalled sites.
+    # You must add these secrets in GitHub Settings, or remove those flags if you don't have accounts.
     - name: Fetch and Convert News
       run: |
-        ebook-convert "BBC News.recipe" "BBC_News.epub" --output-profile=tablet
+        ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet --username="${{ secrets.FT_USERNAME }}" --password="${{ secrets.FT_PASSWORD }}" || true
+        ebook-convert "The Atlantic.recipe" "Atlantic.epub" --output-profile=tablet --username="${{ secrets.ATLANTIC_USERNAME }}" --password="${{ secrets.ATLANTIC_PASSWORD }}" || true
+        ebook-convert "The New Yorker.recipe" "NewYorker.epub" --output-profile=tablet --username="${{ secrets.NY_USERNAME }}" --password="${{ secrets.NY_PASSWORD }}" || true
+        ebook-convert "The Guardian and Observer.recipe" "Guardian.epub" --output-profile=tablet || true
 
-    # STEP 4: Upload to Google Drive
-    # This uses a community action to handle the API handshake
+    # STEP 4: Upload All Epubs
     - name: Upload to Google Drive
       uses: adityak74/google-drive-upload-git-action@main
       with:
         credentials: ${{ secrets.DRIVE_CREDENTIALS }}
-        filename: "BBC_News.epub"
+        filename: "*.epub"
         folderId: ${{ secrets.DRIVE_FOLDER_ID }}
-        overwrite: "true" 
-        # 'overwrite: true' ensures you don't pile up duplicates in your Drive
+        overwrite: "true"
