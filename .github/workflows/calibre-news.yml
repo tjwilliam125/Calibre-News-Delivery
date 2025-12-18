@@ -15,13 +15,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    # NEW STEP: Fixes the "missing system library" error
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libegl1 libopengl0 libxcb-cursor0
+
     - name: Install Calibre
       run: |
         sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin
 
     # STEP 3: Fetch News
-    # The Economist is now included (no credentials).
-    # The New Yorker remains the only one using secrets.
     - name: Fetch and Convert News
       run: |
         ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet || true
