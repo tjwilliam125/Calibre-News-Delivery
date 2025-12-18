@@ -40,9 +40,6 @@ jobs:
       with:
         credentials: ${{ secrets.DRIVE_CREDENTIALS }}
         filename: "*.epub"
-        # PASTE YOUR ACTUAL ID HERE DIRECTLY:
+        # Using the hardcoded ID to force the connection:
         folderId: "19yzh4jQ9n8yuUn4pF7o-2V6_Uc-eABhF" 
-        overwrite: "true"
-        filename: "*.epub"
-        folderId: ${{ secrets.DRIVE_FOLDER_ID }}
         overwrite: "true"
