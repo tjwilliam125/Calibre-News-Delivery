@@ -24,7 +24,7 @@ jobs:
       run: |
         sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin
 
-    # 3. Fetch News (High Quality - No Compression)
+    # 3. Fetch News
     - name: Fetch and Convert News
       run: |
         ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet || true
@@ -70,7 +70,6 @@ jobs:
             with open(local_file, 'rb') as f:
                 content = f.read()
             
-            # Dropbox Upload API arguments
             upload_args = {
                 'path': f'/{local_file}',
                 'mode': 'overwrite',
@@ -100,7 +99,6 @@ jobs:
             entries = res.json().get('entries', [])
             now = datetime.utcnow()
             for entry in entries:
-                # Only look at files (ignore folders)
                 if entry['.tag'] == 'file':
                     # Dropbox time format: 2025-12-19T07:00:00Z
                     file_date = datetime.strptime(entry['server_modified'], '%Y-%m-%dT%H:%M:%SZ')
@@ -110,6 +108,4 @@ jobs:
                         print(f'Deleting {entry[\"name\"]} (Age: {age.days} days)...')
                         del_url = 'https://api.dropboxapi.com/2/files/delete_v2'
                         requests.post(del_url, headers=headers, json={'path': entry['path_lower']})
-        else:
-            print('Failed to list folder:', res.text)
         "
