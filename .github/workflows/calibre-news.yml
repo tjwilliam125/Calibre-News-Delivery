@@ -1,11 +1,9 @@
-name: Daily News to Drive
+name: Daily News to Dropbox
 
-# TRIGGERS
 on:
   workflow_dispatch:
   schedule:
-    # 6:00 AM CDT (UTC-5) = 11:00 UTC
-    - cron: '0 11 * * *'
+    - cron: '0 11 * * *' # 6:00 AM CDT
 
 jobs:
   fetch-and-upload:
@@ -15,17 +13,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # NEW STEP: Fixes the "missing system library" error
+    # 1. Install System Dependencies
     - name: Install Dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y libegl1 libopengl0 libxcb-cursor0
 
+    # 2. Install Calibre
     - name: Install Calibre
       run: |
         sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin
 
-    # STEP 3: Fetch News
+    # 3. Fetch News (High Quality - No Compression)
     - name: Fetch and Convert News
       run: |
         ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet || true
@@ -34,12 +33,83 @@ jobs:
         ebook-convert "The Guardian and Observer.recipe" "Guardian.epub" --output-profile=tablet || true
         ebook-convert "The New Yorker.recipe" "NewYorker.epub" --output-profile=tablet --username="${{ secrets.NY_USERNAME }}" --password="${{ secrets.NY_PASSWORD }}" || true
 
-    # STEP 4: Upload All Epubs
-    - name: Upload to Google Drive
-      uses: adityak74/google-drive-upload-git-action@main
-      with:
-        credentials: ${{ secrets.DRIVE_CREDENTIALS }}
-        filename: "*.epub"
-        # Using the hardcoded ID to force the connection:
-        folderId: "xxxxxxxxxxxx" 
-        overwrite: "true"
+    # 4. Dropbox Upload & Cleanup (Python Script)
+    - name: Upload to Dropbox and Clean Old Files
+      env:
+        APP_KEY: ${{ secrets.48g0atkdh7cq2jz }}
+        APP_SECRET: ${{ secrets.e6zis4wl13g1cw2 }}
+        REFRESH_TOKEN: ${{ secrets.o7OJvIQDDIgAAAAAAAAAATYp3Y9j4zt9_SdwHmyTguNb7RoB3dmCz50sqs9Qp3cn }}
+      run: |
+        python3 -c "
+        import os
+        import sys
+        import requests
+        import glob
+        from datetime import datetime, timedelta
+
+        # 1. Get Access Token
+        print('Refreshing Access Token...')
+        token_url = 'https://api.dropbox.com/oauth2/token'
+        data = {
+            'grant_type': 'refresh_token',
+            'refresh_token': os.environ['REFRESH_TOKEN'],
+            'client_id': os.environ['APP_KEY'],
+            'client_secret': os.environ['APP_SECRET']
+        }
+        r = requests.post(token_url, data=data)
+        if r.status_code != 200:
+            print('Failed to refresh token:', r.text)
+            sys.exit(1)
+        access_token = r.json()['access_token']
+        headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
+
+        # 2. Upload EPUBs
+        files = glob.glob('*.epub')
+        for local_file in files:
+            print(f'Uploading {local_file}...')
+            with open(local_file, 'rb') as f:
+                content = f.read()
+            
+            # Dropbox Upload API arguments
+            upload_args = {
+                'path': f'/{local_file}',
+                'mode': 'overwrite',
+                'autorename': False,
+                'mute': False
+            }
+            
+            headers_upload = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/octet-stream',
+                'Dropbox-API-Arg': str(upload_args).replace(\"'\", '\"')
+            }
+            
+            up = requests.post('https://content.dropboxapi.com/2/files/upload', headers=headers_upload, data=content)
+            if up.status_code == 200:
+                print('Upload success.')
+            else:
+                print('Upload failed:', up.text)
+
+        # 3. Delete Files Older Than 7 Days
+        print('Checking for old files to delete...')
+        list_url = 'https://api.dropboxapi.com/2/files/list_folder'
+        list_data = {'path': '', 'recursive': False}
+        res = requests.post(list_url, headers=headers, json=list_data)
+        
+        if res.status_code == 200:
+            entries = res.json().get('entries', [])
+            now = datetime.utcnow()
+            for entry in entries:
+                # Only look at files (ignore folders)
+                if entry['.tag'] == 'file':
+                    # Dropbox time format: 2025-12-19T07:00:00Z
+                    file_date = datetime.strptime(entry['server_modified'], '%Y-%m-%dT%H:%M:%SZ')
+                    age = now - file_date
+                    
+                    if age > timedelta(days=7):
+                        print(f'Deleting {entry[\"name\"]} (Age: {age.days} days)...')
+                        del_url = 'https://api.dropboxapi.com/2/files/delete_v2'
+                        requests.post(del_url, headers=headers, json={'path': entry['path_lower']})
+        else:
+            print('Failed to list folder:', res.text)
+        "
