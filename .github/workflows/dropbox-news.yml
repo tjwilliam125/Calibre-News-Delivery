@@ -1,0 +1,88 @@
+name: Dropbox News
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 11 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install System Libs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libopengl0 libxcb-cursor0 python3-pip
+
+      - name: Install Python Libs
+        run: pip3 install requests
+
+      - name: Install Calibre
+        run: |
+          sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin
+
+      - name: Fetch News
+        run: |
+          ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet || true
+          ebook-convert "The Economist.recipe" "Economist.epub" --output-profile=tablet || true
+          ebook-convert "The Atlantic.recipe" "Atlantic.epub" --output-profile=tablet || true
+          ebook-convert "The Guardian and Observer.recipe" "Guardian.epub" --output-profile=tablet || true
+          ebook-convert "The New Yorker.recipe" "NewYorker.epub" --output-profile=tablet --username="${{ secrets.NY_USERNAME }}" --password="${{ secrets.NY_PASSWORD }}" || true
+
+      - name: Upload to Dropbox
+        env:
+          KEY: ${{ secrets.48g0atkdh7cq2jz }}
+          SECRET: ${{ secrets.e6zis4wl13g1cw2 }}
+          REFRESH: ${{ secrets.o7OJvIQDDIgAAAAAAAAAATYp3Y9j4zt9_SdwHmyTguNb7RoB3dmCz50sqs9Qp3cn }}
+        run: |
+          python3 -c "
+          import os, sys, requests, glob, json
+          from datetime import datetime
+          
+          # 1. Refresh Token
+          print('Refreshing Token...')
+          res = requests.post('https://api.dropbox.com/oauth2/token', data={
+              'grant_type': 'refresh_token', 
+              'refresh_token': os.environ['REFRESH'],
+              'client_id': os.environ['KEY'],
+              'client_secret': os.environ['SECRET']
+          })
+          if res.status_code != 200:
+              print('Token Error:', res.text)
+              sys.exit(1)
+          
+          TOKEN = res.json()['access_token']
+          HEADERS = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/octet-stream'}
+          
+          # 2. Upload Files
+          for fpath in glob.glob('*.epub'):
+              print(f'Uploading {fpath}...')
+              with open(fpath, 'rb') as f:
+                  data = f.read()
+              
+              args = {'path': f'/{fpath}', 'mode': 'overwrite', 'mute': True}
+              h = HEADERS.copy()
+              h['Dropbox-API-Arg'] = json.dumps(args)
+              
+              requests.post('https://content.dropboxapi.com/2/files/upload', headers=h, data=data)
+
+          # 3. Cleanup Old Files (Simple Version)
+          print('Checking for old files...')
+          list_h = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/json'}
+          lr = requests.post('https://api.dropboxapi.com/2/files/list_folder', headers=list_h, json={'path': ''})
+          
+          if lr.status_code == 200:
+              now = datetime.utcnow()
+              for entry in lr.json().get('entries', []):
+                  if entry['.tag'] == 'file':
+                      try:
+                          ts = datetime.strptime(entry['server_modified'], '%Y-%m-%dT%H:%M:%SZ')
+                          if (now - ts).days > 7:
+                              print(f'Deleting {entry[\"name\"]}')
+                              requests.post('https://api.dropboxapi.com/2/files/delete_v2', headers=list_h, json={'path': entry['path_lower']})
+                      except:
+                          pass
+          "
