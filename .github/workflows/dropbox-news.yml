@@ -34,9 +34,9 @@ jobs:
 
       - name: Upload to Dropbox
         env:
-          KEY: ${{ secrets.48g0atkdh7cq2jz }}
-          SECRET: ${{ secrets.e6zis4wl13g1cw2 }}
-          REFRESH: ${{ secrets.o7OJvIQDDIgAAAAAAAAAATYp3Y9j4zt9_SdwHmyTguNb7RoB3dmCz50sqs9Qp3cn }}
+          KEY: ${{ secrets.DROPBOX_APP_KEY }}
+          SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
+          REFRESH: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
         run: |
           python3 -c "
           import os, sys, requests, glob, json
