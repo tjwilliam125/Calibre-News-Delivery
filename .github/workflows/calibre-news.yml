@@ -13,18 +13,22 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # 1. Install System Dependencies
+    # 1. Install System Dependencies (For Calibre)
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libegl1 libopengl0 libxcb-cursor0
+        sudo apt-get install -y libegl1 libopengl0 libxcb-cursor0 python3-pip
 
-    # 2. Install Calibre
+    # 2. Install Python Libraries (Crucial New Step)
+    - name: Install Python Requests
+      run: pip3 install requests
+
+    # 3. Install Calibre
     - name: Install Calibre
       run: |
         sudo -v && wget -nv -O- https://download.calibre-ebook.com/linux-installer.sh | sudo sh /dev/stdin
 
-    # 3. Fetch News
+    # 4. Fetch News
     - name: Fetch and Convert News
       run: |
         ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet || true
@@ -33,9 +37,10 @@ jobs:
         ebook-convert "The Guardian and Observer.recipe" "Guardian.epub" --output-profile=tablet || true
         ebook-convert "The New Yorker.recipe" "NewYorker.epub" --output-profile=tablet --username="${{ secrets.NY_USERNAME }}" --password="${{ secrets.NY_PASSWORD }}" || true
 
-    # 4. Dropbox Upload & Cleanup (Python Script)
+    # 5. Dropbox Upload & Cleanup
     - name: Upload to Dropbox and Clean Old Files
       env:
+        # Make sure these match your GitHub Secret names EXACTLY
         APP_KEY: ${{ secrets.48g0atkdh7cq2jz }}
         APP_SECRET: ${{ secrets.e6zis4wl13g1cw2 }}
         REFRESH_TOKEN: ${{ secrets.o7OJvIQDDIgAAAAAAAAAATYp3Y9j4zt9_SdwHmyTguNb7RoB3dmCz50sqs9Qp3cn }}
@@ -45,6 +50,7 @@ jobs:
         import sys
         import requests
         import glob
+        import json
         from datetime import datetime, timedelta
 
         # 1. Get Access Token
@@ -61,8 +67,7 @@ jobs:
             print('Failed to refresh token:', r.text)
             sys.exit(1)
         access_token = r.json()['access_token']
-        headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
-
+        
         # 2. Upload EPUBs
         files = glob.glob('*.epub')
         for local_file in files:
@@ -70,6 +75,7 @@ jobs:
             with open(local_file, 'rb') as f:
                 content = f.read()
             
+            # Use strict JSON formatting to avoid errors
             upload_args = {
                 'path': f'/{local_file}',
                 'mode': 'overwrite',
@@ -80,7 +86,7 @@ jobs:
             headers_upload = {
                 'Authorization': f'Bearer {access_token}',
                 'Content-Type': 'application/octet-stream',
-                'Dropbox-API-Arg': str(upload_args).replace(\"'\", '\"')
+                'Dropbox-API-Arg': json.dumps(upload_args)
             }
             
             up = requests.post('https://content.dropboxapi.com/2/files/upload', headers=headers_upload, data=content)
@@ -92,6 +98,7 @@ jobs:
         # 3. Delete Files Older Than 7 Days
         print('Checking for old files to delete...')
         list_url = 'https://api.dropboxapi.com/2/files/list_folder'
+        headers = {'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
         list_data = {'path': '', 'recursive': False}
         res = requests.post(list_url, headers=headers, json=list_data)
         
@@ -100,12 +107,13 @@ jobs:
             now = datetime.utcnow()
             for entry in entries:
                 if entry['.tag'] == 'file':
-                    # Dropbox time format: 2025-12-19T07:00:00Z
-                    file_date = datetime.strptime(entry['server_modified'], '%Y-%m-%dT%H:%M:%SZ')
-                    age = now - file_date
-                    
-                    if age > timedelta(days=7):
-                        print(f'Deleting {entry[\"name\"]} (Age: {age.days} days)...')
-                        del_url = 'https://api.dropboxapi.com/2/files/delete_v2'
-                        requests.post(del_url, headers=headers, json={'path': entry['path_lower']})
+                    try:
+                        file_date = datetime.strptime(entry['server_modified'], '%Y-%m-%dT%H:%M:%SZ')
+                        age = now - file_date
+                        if age > timedelta(days=7):
+                            print(f'Deleting {entry[\"name\"]} (Age: {age.days} days)...')
+                            del_url = 'https://api.dropboxapi.com/2/files/delete_v2'
+                            requests.post(del_url, headers=headers, json={'path': entry['path_lower']})
+                    except Exception as e:
+                        print(f'Skipping check for {entry[\"name\"]}: {e}')
         "
