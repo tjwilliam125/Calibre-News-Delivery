@@ -29,8 +29,7 @@ jobs:
           ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet || true
           ebook-convert "The Economist.recipe" "Economist.epub" --output-profile=tablet || true
           ebook-convert "The Atlantic.recipe" "Atlantic.epub" --output-profile=tablet || true
-          ebook-convert "The Guardian and Observer.recipe" "Guardian.epub" --output-profile=tablet || true
-          ebook-convert "The Guardian (US).recipe" "GuardianUS.epub" --output-profile=tablet || true
+          ebook-convert "GuardianUS_RSS.recipe" "Guardian_US.epub" --output-profile=tablet || true
           ebook-convert "The New Yorker.recipe" "NewYorker.epub" --output-profile=tablet --username="${{ secrets.NY_USERNAME }}" --password="${{ secrets.NY_PASSWORD }}" || true
 
       - name: Upload to Dropbox
