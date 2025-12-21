@@ -6,7 +6,7 @@ Calibre News Delivery (Dropbox Edition)
 ​🚀 Features
 ​Serverless: Runs entirely on GitHub Actions (Ubuntu Linux runners). No home PC required.
 
-​Automated Fetching: Pulls latest issues of The Financial Times, The Economist, The Atlantic, The Guardian, and The New Yorker.
+​Automated Fetching: Pulls latest issues of The Financial Times, The Economist, The Atlantic, The Guardian (UK and (US), and The New Yorker.
 ​Smart Storage Management: Includes a custom Python script that:
 ​Uploads new EPUBs to Dropbox.
 ​Auto-deletes files older than 7 days to prevent filling up the free 2GB Dropbox tier.
