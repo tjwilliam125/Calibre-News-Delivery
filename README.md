@@ -12,7 +12,9 @@ Calibre News Delivery (Dropbox Edition)
 ​Permanent Access: Uses OAuth2 Refresh Tokens so the connection never expires.
 
 ​🛠️ Setup & Configuration
+
 ​1. Requirements
+
 ​A specific Dropbox App created in the Dropbox Developer Console with files.content.write and files.content.read permissions.
 ​GitHub Repository with the .github/workflows/dropbox-news.yml file.
 ​2. Secrets
