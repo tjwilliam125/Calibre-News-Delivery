@@ -17,7 +17,9 @@ Calibre News Delivery (Dropbox Edition)
 
 ​A specific Dropbox App created in the Dropbox Developer Console with files.content.write and files.content.read permissions.
 ​GitHub Repository with the .github/workflows/dropbox-news.yml file.
+
 ​2. Secrets
+
 ​The workflow relies on the following secrets stored in Settings > Secrets and variables > Actions:
 
 Secret Name Description
