@@ -1,0 +1,22 @@
+from calibre.web.feeds.news import BasicNewsRecipe
+
+class GuardianUS_RSS(BasicNewsRecipe):
+    title          = 'The Guardian (US Edition)'
+    oldest_article = 2
+    max_articles_per_feed = 20
+    auto_cleanup   = True
+    language       = 'en'
+    
+    # This bypasses the anti-bot protection by pretending to be a regular browser
+    __author__ = 'GitHub Action'
+    header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+
+    feeds          = [
+        ('Headlines', 'https://www.theguardian.com/us-news/rss'),
+        ('World', 'https://www.theguardian.com/world/rss'),
+        ('Politics', 'https://www.theguardian.com/us-news/us-politics/rss'),
+        ('Opinion', 'https://www.theguardian.com/us-news/commentisfree/rss'),
+        ('Culture', 'https://www.theguardian.com/us/culture/rss'),
+        ('Technology', 'https://www.theguardian.com/us/technology/rss'),
+        ('Science', 'https://www.theguardian.com/science/rss'),
+    ]
