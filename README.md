@@ -6,7 +6,7 @@ Calibre News Delivery (Dropbox Edition)
 ​🚀 Features
 ​Serverless: Runs entirely on GitHub Actions (Ubuntu Linux runners). No home PC required.
 
-​Automated Fetching: Pulls latest issues of The Financial Times, The Economist, The Atlantic, The Guardian (US, using custom RSS recipe), and The New Yorker.
+​Automated Fetching: Pulls latest issues of The Financial Times, The Economist, The Atlantic, The Guardian (US, using custom RSS recipe), and The New Yorker (custom RSS recipe).
 ​Smart Storage Management: Includes a custom Python script that:
 ​Uploads new EPUBs to Dropbox.
 ​Auto-deletes files older than 7 days to prevent filling up the free 2GB Dropbox tier.
@@ -27,8 +27,6 @@ Secret Name Description
 DROPBOX_APP_KEY The App Key from Dropbox Developer Console.
 DROPBOX_APP_SECRET The App Secret from Dropbox Developer Console.
 DROPBOX_REFRESH_TOKEN The long-lived OAuth2 refresh token generated via curl.
-NY_USERNAME Login email for The New Yorker.
-NY_PASSWORD Login
 
 Folder Structure Logic
 Root Folder: The script uploads daily news here. Any file in this root folder older than 7 days is automatically deleted.
