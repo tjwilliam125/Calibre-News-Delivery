@@ -1,4 +1,5 @@
 Calibre News Delivery (Dropbox Edition)
+
 ​A serverless automation tool that fetches daily news sources, converts them to EPUB using Calibre, and delivers them directly to a Dropbox folder for syncing to e-readers.
 ​Currently configured to run automatically every day at 6:00 AM CDT (11:00 UTC).
 
