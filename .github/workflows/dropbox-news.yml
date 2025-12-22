@@ -38,10 +38,6 @@ jobs:
           # New Yorker RSS (Print Edition is more stable)
           # Requires 'NewYorker_Custom.recipe' file in your repo
           ebook-convert "NewYorker_Custom.recipe" "NewYorker.epub" --output-profile=tablet || true
-          
-          # New England Journal of Medicine Abstracts
-          # Requires 'NEJM_RSS.recipe' file in your repo
-          ebook-convert "NEJM_RSS.recipe" "NEJM_Abstracts.epub" --output-profile=tablet || true
 
       - name: Upload to Dropbox (With Date Stamp)
         env:
