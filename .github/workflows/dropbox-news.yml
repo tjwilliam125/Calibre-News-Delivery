@@ -3,7 +3,7 @@ name: Dropbox News
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 11 * * *'
+    - cron: '0 11 * * *' # Runs at 11:00 UTC (6:00 AM CDT)
 
 jobs:
   build:
@@ -26,14 +26,24 @@ jobs:
 
       - name: Fetch News
         run: |
+          # 1. Standard Recipes
           ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet || true
           ebook-convert "The Economist.recipe" "Economist.epub" --output-profile=tablet || true
           ebook-convert "The Atlantic.recipe" "Atlantic.epub" --output-profile=tablet || true
-          ebook-convert "GuardianUS_RSS.recipe" "Guardian_US.epub" --output-profile=tablet || true
+
+          # 2. Custom/Specific Recipes
+          # Requires 'GuardianUS_RSS.recipe' file in your repo
+          ebook-convert "GuardianUS_RSS.recipe" "GuardianUS.epub" --output-profile=tablet || true
+
+          # New Yorker RSS (Print Edition is more stable)
+          # Requires 'NewYorker_Custom.recipe' file in your repo
           ebook-convert "NewYorker_Custom.recipe" "NewYorker.epub" --output-profile=tablet || true
+          
+          # New England Journal of Medicine Abstracts
+          # Requires 'NEJM_RSS.recipe' file in your repo
           ebook-convert "NEJM_RSS.recipe" "NEJM_Abstracts.epub" --output-profile=tablet || true
 
-      - name: Upload to Dropbox
+      - name: Upload to Dropbox (With Date Stamp)
         env:
           KEY: ${{ secrets.DROPBOX_APP_KEY }}
           SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
@@ -43,13 +53,19 @@ jobs:
           import os, sys, requests, glob, json
           from datetime import datetime
           
+          # CONFIG
+          KEY = os.environ['KEY']
+          SECRET = os.environ['SECRET']
+          REFRESH = os.environ['REFRESH']
+          TODAY = datetime.utcnow().strftime('%Y-%m-%d') # e.g., 2025-12-22
+
           # 1. Refresh Token
           print('Refreshing Token...')
           res = requests.post('https://api.dropbox.com/oauth2/token', data={
               'grant_type': 'refresh_token', 
-              'refresh_token': os.environ['REFRESH'],
-              'client_id': os.environ['KEY'],
-              'client_secret': os.environ['SECRET']
+              'refresh_token': REFRESH,
+              'client_id': KEY,
+              'client_secret': SECRET
           })
           if res.status_code != 200:
               print('Token Error:', res.text)
@@ -60,17 +76,21 @@ jobs:
           
           # 2. Upload Files
           for fpath in glob.glob('*.epub'):
-              print(f'Uploading {fpath}...')
+              # Rename: Economist.epub -> Economist_2025-12-22.epub
+              base_name = os.path.splitext(fpath)[0]
+              dated_name = f'{base_name}_{TODAY}.epub'
+              
+              print(f'Uploading {dated_name}...')
               with open(fpath, 'rb') as f:
                   data = f.read()
               
-              args = {'path': f'/{fpath}', 'mode': 'overwrite', 'mute': True}
+              args = {'path': f'/{dated_name}', 'mode': 'overwrite', 'mute': True}
               h = HEADERS.copy()
               h['Dropbox-API-Arg'] = json.dumps(args)
               
               requests.post('https://content.dropboxapi.com/2/files/upload', headers=h, data=data)
 
-          # 3. Cleanup Old Files (Simple Version)
+          # 3. Cleanup Old Files (Older than 7 days)
           print('Checking for old files...')
           list_h = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/json'}
           lr = requests.post('https://api.dropboxapi.com/2/files/list_folder', headers=list_h, json={'path': ''})
