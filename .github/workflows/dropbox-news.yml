@@ -31,7 +31,7 @@ jobs:
           ebook-convert "The Atlantic.recipe" "Atlantic.epub" --output-profile=tablet || true
           ebook-convert "GuardianUS_RSS.recipe" "Guardian_US.epub" --output-profile=tablet || true
           ebook-convert "NewYorker_Custom.recipe" "NewYorker.epub" --output-profile=tablet || true
-          ebook-convert "The New England Journal of Medicine.recipe" "NEJM.epub" --output-profile=tablet --username="${{ secrets.NEJM_USERNAME }}" --password="${{ secrets.NEJM_PASSWORD }}" || true
+          ebook-convert "NEJM_RSS.recipe" "NEJM_Abstracts.epub" --output-profile=tablet || true
 
       - name: Upload to Dropbox
         env:
