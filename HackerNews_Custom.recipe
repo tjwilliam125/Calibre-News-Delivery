@@ -7,6 +7,8 @@ class HackerNews_Custom(BasicNewsRecipe):
     oldest_article = 1.5 # Only last 36 hours
     max_articles_per_feed = 30
     auto_cleanup   = True
+
+    cover_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Y_Combinator_logo.svg/1024px-Y_Combinator_logo.svg.png'
     
     header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
 
