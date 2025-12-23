@@ -1,0 +1,10 @@
+from calibre.web.feeds.news import BasicNewsRecipe
+class FT_Custom(BasicNewsRecipe):
+    title = 'Financial Times'
+    oldest_article = 1
+    max_articles_per_feed = 25
+    auto_cleanup = True
+    # The classic pink FT logo square
+    cover_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Financial_Times_Logo.svg/1200px-Financial_Times_Logo.svg.png'
+    
+    feeds = [('Headlines', 'https://www.ft.com/?format=rss')]
