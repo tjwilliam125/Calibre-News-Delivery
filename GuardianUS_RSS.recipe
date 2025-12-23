@@ -6,6 +6,8 @@ class GuardianUS_RSS(BasicNewsRecipe):
     max_articles_per_feed = 20
     auto_cleanup   = True
     language       = 'en'
+
+    cover_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/The_Guardian_2018.svg/2560px-The_Guardian_2018.svg.png'
     
     # This bypasses the anti-bot protection by pretending to be a regular browser
     __author__ = 'GitHub Action'
