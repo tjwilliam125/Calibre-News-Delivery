@@ -7,6 +7,8 @@ class Wired_Custom(BasicNewsRecipe):
     oldest_article = 7
     max_articles_per_feed = 20
     auto_cleanup   = True
+
+    cover_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Wired_logo.svg/2560px-Wired_logo.svg.png'
     
     # Masquerade as Chrome
     header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
