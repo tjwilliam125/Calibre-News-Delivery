@@ -31,10 +31,7 @@ jobs:
           ebook-convert "The Economist.recipe" "Economist.epub" --output-profile=tablet || true
           ebook-convert "The Atlantic.recipe" "Atlantic.epub" --output-profile=tablet || true
           ebook-convert "Ars Technica.recipe" "ArsTechnica.epub" --output-profile=tablet || true
-          ebook-convert "Wired.recipe" "Wired.epub" --output-profile=tablet || true
-          ebook-convert "Hacker News.recipe" "HackerNews.epub" --output-profile=tablet || true
           ebook-convert "Scientific American.recipe" "SciAm.epub" --output-profile=tablet || true
-          ebook-convert "ProPublica.recipe" "ProPublica.epub" --output-profile=tablet || true
 
           # 2. Custom/Specific Recipes
           # Requires 'GuardianUS_RSS.recipe' file in your repo
@@ -43,6 +40,16 @@ jobs:
           # New Yorker RSS (Print Edition is more stable)
           # Requires 'NewYorker_Custom.recipe' file in your repo
           ebook-convert "NewYorker_Custom.recipe" "NewYorker.epub" --output-profile=tablet || true
+
+          # --- TECHNOLOGY & INVESTIGATION ---
+          # Wired (Custom RSS)
+          ebook-convert "Wired_Custom.recipe" "Wired.epub" --output-profile=tablet || true
+
+          # Hacker News (Custom RSS)
+          ebook-convert "HackerNews_Custom.recipe" "HackerNews.epub" --output-profile=tablet || true
+
+          # ProPublica (Custom RSS)
+          ebook-convert "ProPublica_Custom.recipe" "ProPublica.epub" --output-profile=tablet || true
 
       - name: Upload to Dropbox (With Date Stamp)
         env:
