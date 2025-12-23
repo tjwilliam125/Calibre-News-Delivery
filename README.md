@@ -1,18 +1,19 @@
 Calibre News Delivery (Dropbox Edition)
 
-​A serverless automation tool that fetches daily news sources, converts them to EPUB using Calibre, and delivers them directly to a Dropbox folder for syncing to e-readers.
+​A serverless automation tool that fetches daily news sources, converts them to EPUB using Calibre, and delivers them directly to a Dropbox folder for syncing to e-readers. 
 ​Currently configured to run automatically every day at 6:00 AM CDT (11:00 UTC).
 
 ​🚀 Features
 ​Serverless: Runs entirely on GitHub Actions (Ubuntu Linux runners). No home PC required.
 
-​Automated Fetching: Pulls latest issues of The Financial Times, The Economist, The Atlantic, The Guardian (US, using custom RSS recipe), and The New Yorker (custom RSS recipe).
-​Smart Storage Management: Includes a custom Python script that:
-​Uploads new EPUBs to Dropbox.
-​Auto-deletes files older than 7 days to prevent filling up the free 2GB Dropbox tier.
-​Permanent Access: Uses OAuth2 Refresh Tokens so the connection never expires.
+​Automated Fetching: Pulls latest issues of Ars Technica (custom recipe), The Atlantic, The Economist, The Financial Times, The Guardian US (custom recipe), Hacker News (custom recipe), The New Yorker (custom recipe), ProPublica (custom recipe), Scientific American, and Wired (custom recipe).
 
-​🛠️ Setup & Configuration
+​Smart Storage Management: Includes a custom Python script that:
+--Uploads new EPUBs to Dropbox.
+​--Auto-deletes files older than 7 days to prevent filling up the free 2GB Dropbox tier.
+​--Permanent Access: Uses OAuth2 Refresh Tokens so the connection never expires.
+
+​Setup & Configuration
 
 ​1. Requirements
 
@@ -31,7 +32,8 @@ DROPBOX_REFRESH_TOKEN The long-lived OAuth2 refresh token generated via curl.
 Folder Structure Logic
 Root Folder: The script uploads daily news here. Any file in this root folder older than 7 days is automatically deleted.
 Subfolders (e.g., /Permanent): The script ignores subfolders. Use these for manually saved books or articles you wish to keep indefinitely.
-🔄 Workflow
+
+Workflow
 Install: Sets up Calibre and Python dependencies (requests, libegl1).
 Fetch: Runs ebook-convert for each recipe.
 Upload: Python script authenticates via Refresh Token and uploads files.
