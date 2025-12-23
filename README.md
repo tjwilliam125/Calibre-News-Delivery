@@ -1,6 +1,6 @@
 Calibre News Delivery (Dropbox Edition)
 
-​A serverless automation tool that fetches daily news sources, converts them to EPUB using Calibre, and delivers them directly to a Dropbox folder for syncing to e-readers. Currently configured to run automatically every day at 6:00 AM CDT (11:00 UTC).
+​A serverless automation tool that fetches daily news sources, converts them to EPUB using Calibre, and delivers them directly to a Dropbox folder for syncing to e-readers (which could be further automated using the Dropsync app). Currently configured to run automatically every day at 6:00 AM CDT (11:00 UTC).
 
 ​Features
 
@@ -39,7 +39,6 @@ Install: Sets up Calibre and Python dependencies (requests, libegl1).
 Fetch: Runs ebook-convert for each recipe.
 Upload: Python script authenticates via Refresh Token and uploads files.
 Clean: Python script checks file timestamps and removes expired news.
-📱 Client Setup (Android)
 Recommended pairing with Dropsync (or similar sync tools):
 Remote Folder: /Apps/Calibre-News-[YourName]
 Local Folder: /Downloads/News
