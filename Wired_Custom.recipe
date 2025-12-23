@@ -1,0 +1,19 @@
+from calibre.web.feeds.news import BasicNewsRecipe
+
+class Wired_Custom(BasicNewsRecipe):
+    title          = 'Wired (Custom)'
+    __author__     = 'GitHub Action'
+    language       = 'en'
+    oldest_article = 7
+    max_articles_per_feed = 20
+    auto_cleanup   = True
+    
+    # Masquerade as Chrome
+    header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+
+    feeds = [
+        ('Top Stories', 'https://www.wired.com/feed/rss'),
+        ('Science', 'https://www.wired.com/feed/category/science/latest/rss'),
+        ('Security', 'https://www.wired.com/feed/category/security/latest/rss'),
+        ('Business', 'https://www.wired.com/feed/category/business/latest/rss'),
+    ]
