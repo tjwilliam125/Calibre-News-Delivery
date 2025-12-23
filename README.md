@@ -1,14 +1,15 @@
 Calibre News Delivery (Dropbox Edition)
 
-​A serverless automation tool that fetches daily news sources, converts them to EPUB using Calibre, and delivers them directly to a Dropbox folder for syncing to e-readers. 
-​Currently configured to run automatically every day at 6:00 AM CDT (11:00 UTC).
+​A serverless automation tool that fetches daily news sources, converts them to EPUB using Calibre, and delivers them directly to a Dropbox folder for syncing to e-readers. Currently configured to run automatically every day at 6:00 AM CDT (11:00 UTC).
 
-​🚀 Features
+​Features
+
 ​Serverless: Runs entirely on GitHub Actions (Ubuntu Linux runners). No home PC required.
 
 ​Automated Fetching: Pulls latest issues of Ars Technica (custom recipe), The Atlantic, The Economist, The Financial Times, The Guardian US (custom recipe), Hacker News (custom recipe), The New Yorker (custom recipe), ProPublica (custom recipe), Scientific American, and Wired (custom recipe).
 
-​Smart Storage Management: Includes a custom Python script that:
+​Smart Storage Management: 
+Includes a custom Python script that
 --Uploads new EPUBs to Dropbox.
 ​--Auto-deletes files older than 7 days to prevent filling up the free 2GB Dropbox tier.
 ​--Permanent Access: Uses OAuth2 Refresh Tokens so the connection never expires.
