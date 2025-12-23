@@ -27,13 +27,16 @@ jobs:
       - name: Fetch News
         run: |
           # 1. Standard Recipes
-          ebook-convert "Financial Times.recipe" "FT.epub" --output-profile=tablet || true
           ebook-convert "The Economist.recipe" "Economist.epub" --output-profile=tablet || true
           ebook-convert "The Atlantic.recipe" "Atlantic.epub" --output-profile=tablet || true
           ebook-convert "Ars Technica.recipe" "ArsTechnica.epub" --output-profile=tablet || true
           ebook-convert "Scientific American.recipe" "SciAm.epub" --output-profile=tablet || true
 
           # 2. Custom/Specific Recipes
+
+          # Requires 'FT_Custom.recipe' file in your repo
+          ebook-convert "FT_Custom.recipe" "FT.epub" --output-profile=tablet || true
+          
           # Requires 'GuardianUS_RSS.recipe' file in your repo
           ebook-convert "GuardianUS_RSS.recipe" "GuardianUS.epub" --output-profile=tablet || true
 
