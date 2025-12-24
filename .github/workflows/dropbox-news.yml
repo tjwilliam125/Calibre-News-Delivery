@@ -54,6 +54,16 @@ jobs:
           # ProPublica (Custom RSS)
           ebook-convert "ProPublica_Custom.recipe" "ProPublica.epub" --output-profile=tablet || true
 
+          # --- CRYPTO & FINANCE ---
+          # Bitcoin Magazine (Deep Dives)
+          ebook-convert "BitcoinMagazine_Custom.recipe" "BitcoinMag.epub" --output-profile=tablet --tags "News, Crypto" || true
+
+          # CoinDesk (Daily Markets)
+          ebook-convert "CoinDesk_Custom.recipe" "CoinDesk.epub" --output-profile=tablet --tags "News, Crypto" || true
+
+          # Decrypt (Culture/Web3)
+          ebook-convert "Decrypt_Custom.recipe" "Decrypt.epub" --output-profile=tablet --tags "News, Crypto" || true
+
       - name: Upload to Dropbox (With Date Stamp)
         env:
           KEY: ${{ secrets.DROPBOX_APP_KEY }}
