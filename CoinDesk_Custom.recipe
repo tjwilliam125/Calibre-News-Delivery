@@ -1,0 +1,17 @@
+from calibre.web.feeds.news import BasicNewsRecipe
+
+class CoinDesk_Custom(BasicNewsRecipe):
+    title          = 'CoinDesk'
+    __author__     = 'GitHub Action'
+    language       = 'en'
+    oldest_article = 2
+    max_articles_per_feed = 30
+    auto_cleanup   = True
+
+    cover_url = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/CoinDesk_logo.svg/1200px-CoinDesk_logo.svg.png'
+
+    header = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+
+    feeds = [
+        ('Markets', 'https://www.coindesk.com/arc/outboundfeeds/rss/?outputType=xml'),
+    ]
