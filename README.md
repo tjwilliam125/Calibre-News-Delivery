@@ -6,7 +6,7 @@ Calibre News Delivery (Dropbox Edition)
 
 ​Serverless: Runs entirely on GitHub Actions (Ubuntu Linux runners). No home PC required.
 
-​Automated Fetching: Pulls latest issues of Ars Technica, The Atlantic, BitcoinMag,CoinDesk,Decrypt,The Economist, The Financial Times, The Guardian US, Hacker News, The New Yorker, ProPublica, Scientific American, and Wired.
+​Automated Fetching: Pulls latest issues of Ars Technica, The Atlantic, BitcoinMag, CoinDesk, Decrypt, The Economist, The Financial Times, The Guardian US, Hacker News, The New Yorker, ProPublica, Scientific American, and Wired.
 
 ​Smart Storage Management: 
 Includes a custom Python script that
