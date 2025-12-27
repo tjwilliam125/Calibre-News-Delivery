@@ -31,7 +31,7 @@ DROPBOX_APP_SECRET The App Secret from Dropbox Developer Console.
 DROPBOX_REFRESH_TOKEN The long-lived OAuth2 refresh token generated via curl.
 
 Folder Structure Logic
-Root Folder: The script uploads daily news here. Any file in this root folder older than 7 days is automatically deleted.
+Root Folder: The script uploads daily news here. Any file in this root folder older than 3 days is automatically deleted.
 Subfolders (e.g., /Permanent): The script ignores subfolders. Use these for manually saved books or articles you wish to keep indefinitely.
 
 Workflow
