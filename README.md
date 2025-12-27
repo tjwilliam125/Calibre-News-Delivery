@@ -32,6 +32,7 @@ DROPBOX_REFRESH_TOKEN The long-lived OAuth2 refresh token generated via curl.
 
 Folder Structure Logic
 Root Folder: The script uploads daily news here. Any file in this root folder older than 3 days is automatically deleted.
+To save space, script will not re-upload articles from the same source if already uploaded that day.
 Subfolders (e.g., /Permanent): The script ignores subfolders. Use these for manually saved books or articles you wish to keep indefinitely.
 
 Workflow
