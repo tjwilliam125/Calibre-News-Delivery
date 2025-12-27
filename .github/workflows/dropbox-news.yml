@@ -111,7 +111,7 @@ jobs:
               
               requests.post('https://content.dropboxapi.com/2/files/upload', headers=h, data=data)
 
-          # 3. Cleanup Old Files (Older than 7 days)
+          # 3. Cleanup Old Files (Older than 3 days)
           print('Checking for old files...')
           list_h = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/json'}
           lr = requests.post('https://api.dropboxapi.com/2/files/list_folder', headers=list_h, json={'path': ''})
@@ -122,7 +122,8 @@ jobs:
                   if entry['.tag'] == 'file':
                       try:
                           ts = datetime.strptime(entry['server_modified'], '%Y-%m-%dT%H:%M:%SZ')
-                          if (now - ts).days > 7:
+                          # CHANGED: 7 days -> 3 days
+                          if (now - ts).days > 3:
                               print(f'Deleting {entry[\"name\"]}')
                               requests.post('https://api.dropboxapi.com/2/files/delete_v2', headers=list_h, json={'path': entry['path_lower']})
                       except:
