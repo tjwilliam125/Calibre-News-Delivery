@@ -11,7 +11,7 @@ Calibre News Delivery (Dropbox Edition)
 ​Smart Storage Management: 
 Includes a custom Python script that
 --Uploads new EPUBs to Dropbox.
-​--Auto-deletes files older than 7 days to prevent filling up the free 2GB Dropbox tier.
+​--Auto-deletes files older than 3 days to prevent filling up the free 2GB Dropbox tier.
 ​--Permanent Access: Uses OAuth2 Refresh Tokens so the connection never expires.
 
 ​Setup & Configuration
