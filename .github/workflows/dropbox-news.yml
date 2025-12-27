@@ -33,38 +33,19 @@ jobs:
           ebook-convert "Scientific American.recipe" "SciAm.epub" --output-profile=tablet || true
 
           # 2. Custom/Specific Recipes
-
-          # Requires 'FT_Custom.recipe' file in your repo
           ebook-convert "FT_Custom.recipe" "FT.epub" --output-profile=tablet || true
-          
-          # Requires 'GuardianUS_RSS.recipe' file in your repo
           ebook-convert "GuardianUS_RSS.recipe" "GuardianUS.epub" --output-profile=tablet || true
-
-          # New Yorker RSS (Print Edition is more stable)
-          # Requires 'NewYorker_Custom.recipe' file in your repo
           ebook-convert "NewYorker_Custom.recipe" "NewYorker.epub" --output-profile=tablet || true
 
-          # --- TECHNOLOGY & INVESTIGATION ---
-          # Wired (Custom RSS)
+          # 3. Technology & Crypto
           ebook-convert "Wired_Custom.recipe" "Wired.epub" --output-profile=tablet || true
-
-          # Hacker News (Custom RSS)
           ebook-convert "HackerNews_Custom.recipe" "HackerNews.epub" --output-profile=tablet || true
-
-          # ProPublica (Custom RSS)
           ebook-convert "ProPublica_Custom.recipe" "ProPublica.epub" --output-profile=tablet || true
-
-          # --- CRYPTO & FINANCE ---
-          # Bitcoin Magazine (Deep Dives)
           ebook-convert "BitcoinMagazine_Custom.recipe" "BitcoinMag.epub" --output-profile=tablet --tags "News, Crypto" || true
-
-          # CoinDesk (Daily Markets)
           ebook-convert "CoinDesk_Custom.recipe" "CoinDesk.epub" --output-profile=tablet --tags "News, Crypto" || true
-
-          # Decrypt (Culture/Web3)
           ebook-convert "Decrypt_Custom.recipe" "Decrypt.epub" --output-profile=tablet --tags "News, Crypto" || true
 
-      - name: Upload to Dropbox (With Date Stamp)
+      - name: Upload to Dropbox (Robust Cleanup)
         env:
           KEY: ${{ secrets.DROPBOX_APP_KEY }}
           SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
@@ -73,31 +54,33 @@ jobs:
           python3 -c "
           import os, sys, requests, glob, json
           from datetime import datetime
-          
-          # CONFIG
+
+          # --- CONFIG ---
           KEY = os.environ['KEY']
           SECRET = os.environ['SECRET']
           REFRESH = os.environ['REFRESH']
-          TODAY = datetime.utcnow().strftime('%Y-%m-%d') # e.g., 2025-12-22
+          TODAY = datetime.utcnow().strftime('%Y-%m-%d')
+          DELETE_OLDER_THAN_DAYS = 3
 
-          # 1. Refresh Token
+          # 1. Get Access Token
           print('Refreshing Token...')
           res = requests.post('https://api.dropbox.com/oauth2/token', data={
-              'grant_type': 'refresh_token', 
+              'grant_type': 'refresh_token',
               'refresh_token': REFRESH,
               'client_id': KEY,
               'client_secret': SECRET
           })
           if res.status_code != 200:
-              print('Token Error:', res.text)
+              print('CRITICAL: Token Refresh Failed:', res.text)
               sys.exit(1)
-          
+
           TOKEN = res.json()['access_token']
-          HEADERS = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/octet-stream'}
-          
-          # 2. Upload Files
+          UPLOAD_HEADERS = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/octet-stream'}
+          JSON_HEADERS = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/json'}
+
+          # 2. Upload New Files
+          print('--- UPLOADING NEW FILES ---')
           for fpath in glob.glob('*.epub'):
-              # Rename: Economist.epub -> Economist_2025-12-22.epub
               base_name = os.path.splitext(fpath)[0]
               dated_name = f'{base_name}_{TODAY}.epub'
               
@@ -106,26 +89,58 @@ jobs:
                   data = f.read()
               
               args = {'path': f'/{dated_name}', 'mode': 'overwrite', 'mute': True}
-              h = HEADERS.copy()
+              h = UPLOAD_HEADERS.copy()
               h['Dropbox-API-Arg'] = json.dumps(args)
               
-              requests.post('https://content.dropboxapi.com/2/files/upload', headers=h, data=data)
+              up_res = requests.post('https://content.dropboxapi.com/2/files/upload', headers=h, data=data)
+              if up_res.status_code != 200:
+                  print(f'Error uploading {dated_name}:', up_res.text)
 
-          # 3. Cleanup Old Files (Older than 3 days)
-          print('Checking for old files...')
-          list_h = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/json'}
-          lr = requests.post('https://api.dropboxapi.com/2/files/list_folder', headers=list_h, json={'path': ''})
+          # 3. Robust Cleanup (Pagination Support)
+          print(f'--- CLEANUP (Files older than {DELETE_OLDER_THAN_DAYS} days) ---')
           
-          if lr.status_code == 200:
+          has_more = True
+          cursor = None
+          
+          while has_more:
+              if cursor:
+                  list_payload = {'cursor': cursor}
+                  list_endpoint = 'https://api.dropboxapi.com/2/files/list_folder/continue'
+              else:
+                  list_payload = {'path': '', 'limit': 2000} # Scan Root Folder
+                  list_endpoint = 'https://api.dropboxapi.com/2/files/list_folder'
+
+              lr = requests.post(list_endpoint, headers=JSON_HEADERS, json=list_payload)
+              
+              if lr.status_code != 200:
+                  print('Error listing files:', lr.text)
+                  break
+
+              data = lr.json()
+              entries = data.get('entries', [])
+              has_more = data.get('has_more', False)
+              cursor = data.get('cursor', '')
+
               now = datetime.utcnow()
-              for entry in lr.json().get('entries', []):
+
+              for entry in entries:
                   if entry['.tag'] == 'file':
                       try:
+                          # Parse Dropbox time (UTC)
                           ts = datetime.strptime(entry['server_modified'], '%Y-%m-%dT%H:%M:%SZ')
-                          # CHANGED: 7 days -> 3 days
-                          if (now - ts).days > 3:
-                              print(f'Deleting {entry[\"name\"]}')
-                              requests.post('https://api.dropboxapi.com/2/files/delete_v2', headers=list_h, json={'path': entry['path_lower']})
-                      except:
-                          pass
+                          age = (now - ts).days
+                          
+                          # Debug Print (Uncomment if needed)
+                          # print(f"Scanning: {entry['name']} | Age: {age} days")
+
+                          if age > DELETE_OLDER_THAN_DAYS:
+                              print(f">> DELETING: {entry['name']} (Age: {age} days)")
+                              del_res = requests.post('https://api.dropboxapi.com/2/files/delete_v2', headers=JSON_HEADERS, json={'path': entry['path_lower']})
+                              
+                              if del_res.status_code != 200:
+                                  print(f"!! Failed to delete {entry['name']}: {del_res.text}")
+                      except Exception as e:
+                          print(f"Error checking {entry.get('name')}: {e}")
+          
+          print('Cleanup Complete.')
           "
