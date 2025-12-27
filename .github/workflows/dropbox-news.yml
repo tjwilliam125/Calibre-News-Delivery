@@ -45,14 +45,14 @@ jobs:
           ebook-convert "CoinDesk_Custom.recipe" "CoinDesk.epub" --output-profile=tablet --tags "News, Crypto" || true
           ebook-convert "Decrypt_Custom.recipe" "Decrypt.epub" --output-profile=tablet --tags "News, Crypto" || true
 
-      - name: Upload to Dropbox (Robust Cleanup)
+      - name: Upload to Dropbox (Smart Sync)
         env:
           KEY: ${{ secrets.DROPBOX_APP_KEY }}
           SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
           REFRESH: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
         run: |
-          # Write the Python script to a file first (Avoids quoting errors)
-          cat << 'EOF' > upload_script.py
+          # Write Python script to file to avoid quote syntax errors
+          cat << 'EOF' > smart_sync.py
           import os, sys, requests, glob, json
           from datetime import datetime
 
@@ -79,11 +79,42 @@ jobs:
           UPLOAD_HEADERS = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/octet-stream'}
           JSON_HEADERS = {'Authorization': f'Bearer {TOKEN}', 'Content-Type': 'application/json'}
 
-          # 2. Upload New Files
-          print('--- UPLOADING NEW FILES ---')
+          # 2. Fetch Existing File List (Used for both duplicate check AND cleanup)
+          print('--- FETCHING DROPBOX FILE LIST ---')
+          existing_entries = []
+          has_more = True
+          cursor = None
+          
+          while has_more:
+              if cursor:
+                  list_payload = {'cursor': cursor}
+                  list_endpoint = 'https://api.dropboxapi.com/2/files/list_folder/continue'
+              else:
+                  list_payload = {'path': '', 'limit': 2000}
+                  list_endpoint = 'https://api.dropboxapi.com/2/files/list_folder'
+
+              lr = requests.post(list_endpoint, headers=JSON_HEADERS, json=list_payload)
+              if lr.status_code != 200:
+                  print('Error listing files:', lr.text)
+                  sys.exit(1)
+
+              data = lr.json()
+              existing_entries.extend(data.get('entries', []))
+              has_more = data.get('has_more', False)
+              cursor = data.get('cursor', '')
+
+          # Create a set of filenames for fast lookup
+          existing_filenames = {e['name'] for e in existing_entries if e['.tag'] == 'file'}
+
+          # 3. Smart Upload (Skip if exists)
+          print('\n--- PROCESSING UPLOADS ---')
           for fpath in glob.glob('*.epub'):
               base_name = os.path.splitext(fpath)[0]
               dated_name = f'{base_name}_{TODAY}.epub'
+              
+              if dated_name in existing_filenames:
+                  print(f"Skipping {dated_name} (Already exists)")
+                  continue
               
               print(f'Uploading {dated_name}...')
               with open(fpath, 'rb') as f:
@@ -97,51 +128,25 @@ jobs:
               if up_res.status_code != 200:
                   print(f'Error uploading {dated_name}:', up_res.text)
 
-          # 3. Robust Cleanup (Pagination Support)
-          print(f'--- CLEANUP (Files older than {DELETE_OLDER_THAN_DAYS} days) ---')
+          # 4. Cleanup (Using the list we already fetched)
+          print(f'\n--- CLEANUP (Files older than {DELETE_OLDER_THAN_DAYS} days) ---')
+          now = datetime.utcnow()
+
+          for entry in existing_entries:
+              if entry['.tag'] == 'file':
+                  try:
+                      ts = datetime.strptime(entry['server_modified'], '%Y-%m-%dT%H:%M:%SZ')
+                      age = (now - ts).days
+                      
+                      if age > DELETE_OLDER_THAN_DAYS:
+                          print(f">> DELETING: {entry['name']} (Age: {age} days)")
+                          del_res = requests.post('https://api.dropboxapi.com/2/files/delete_v2', headers=JSON_HEADERS, json={'path': entry['path_lower']})
+                          if del_res.status_code != 200:
+                              print(f"!! Failed to delete {entry['name']}: {del_res.text}")
+                  except Exception as e:
+                      print(f"Error checking {entry.get('name')}: {e}")
           
-          has_more = True
-          cursor = None
-          
-          while has_more:
-              if cursor:
-                  list_payload = {'cursor': cursor}
-                  list_endpoint = 'https://api.dropboxapi.com/2/files/list_folder/continue'
-              else:
-                  list_payload = {'path': '', 'limit': 2000} # Scan Root Folder
-                  list_endpoint = 'https://api.dropboxapi.com/2/files/list_folder'
-
-              lr = requests.post(list_endpoint, headers=JSON_HEADERS, json=list_payload)
-              
-              if lr.status_code != 200:
-                  print('Error listing files:', lr.text)
-                  break
-
-              data = lr.json()
-              entries = data.get('entries', [])
-              has_more = data.get('has_more', False)
-              cursor = data.get('cursor', '')
-
-              now = datetime.utcnow()
-
-              for entry in entries:
-                  if entry['.tag'] == 'file':
-                      try:
-                          # Parse Dropbox time (UTC)
-                          ts = datetime.strptime(entry['server_modified'], '%Y-%m-%dT%H:%M:%SZ')
-                          age = (now - ts).days
-                          
-                          if age > DELETE_OLDER_THAN_DAYS:
-                              print(f">> DELETING: {entry['name']} (Age: {age} days)")
-                              del_res = requests.post('https://api.dropboxapi.com/2/files/delete_v2', headers=JSON_HEADERS, json={'path': entry['path_lower']})
-                              
-                              if del_res.status_code != 200:
-                                  print(f"!! Failed to delete {entry['name']}: {del_res.text}")
-                      except Exception as e:
-                          print(f"Error checking {entry.get('name')}: {e}")
-          
-          print('Cleanup Complete.')
+          print('Sync Complete.')
           EOF
           
-          # Run the script we just wrote
-          python3 upload_script.py
+          python3 smart_sync.py
