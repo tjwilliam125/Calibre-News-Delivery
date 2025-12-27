@@ -51,7 +51,8 @@ jobs:
           SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
           REFRESH: ${{ secrets.DROPBOX_REFRESH_TOKEN }}
         run: |
-          python3 -c "
+          # Write the Python script to a file first (Avoids quoting errors)
+          cat << 'EOF' > upload_script.py
           import os, sys, requests, glob, json
           from datetime import datetime
 
@@ -130,9 +131,6 @@ jobs:
                           ts = datetime.strptime(entry['server_modified'], '%Y-%m-%dT%H:%M:%SZ')
                           age = (now - ts).days
                           
-                          # Debug Print (Uncomment if needed)
-                          # print(f"Scanning: {entry['name']} | Age: {age} days")
-
                           if age > DELETE_OLDER_THAN_DAYS:
                               print(f">> DELETING: {entry['name']} (Age: {age} days)")
                               del_res = requests.post('https://api.dropboxapi.com/2/files/delete_v2', headers=JSON_HEADERS, json={'path': entry['path_lower']})
@@ -143,4 +141,7 @@ jobs:
                           print(f"Error checking {entry.get('name')}: {e}")
           
           print('Cleanup Complete.')
-          "
+          EOF
+          
+          # Run the script we just wrote
+          python3 upload_script.py
