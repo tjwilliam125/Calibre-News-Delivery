@@ -46,5 +46,4 @@ Remote Folder: /Apps/Calibre-News-[YourName]
 Local Folder: /Downloads/News
 Method: "Download only" (to avoid syncing deletions back to the server).
 
-<img width="2816" height="1536" alt="Gemini_Generated_Image_if80coif80coif80" src="https://github.com/user-attachments/assets/d35c3354-f77d-48c7-94c4-9740f1b9f349" />
-
+<img width="2816" height="1536" alt="Gemini_Generated_Image_tjzpbhtjzpbhtjzp" src="https://github.com/user-attachments/assets/c41db1ba-e16b-4e30-ad29-5f8e3f61977e" />
