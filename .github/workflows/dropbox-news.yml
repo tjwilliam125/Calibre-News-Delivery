@@ -33,7 +33,6 @@ jobs:
           ebook-convert "Scientific American.recipe" "SciAm.epub" --output-profile=tablet || true
 
           # 2. Custom/Specific Recipes
-          ebook-convert "FT_Custom.recipe" "FT.epub" --output-profile=tablet || true
           ebook-convert "GuardianUS_RSS.recipe" "GuardianUS.epub" --output-profile=tablet || true
           ebook-convert "NewYorker_Custom.recipe" "NewYorker.epub" --output-profile=tablet || true
 
