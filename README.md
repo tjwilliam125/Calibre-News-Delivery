@@ -45,3 +45,4 @@ Recommended pairing with Dropsync (or similar sync tools):
 Remote Folder: /Apps/Calibre-News-[YourName]
 Local Folder: /Downloads/News
 Method: "Download only" (to avoid syncing deletions back to the server).
+<img width="2816" height="1536" alt="Gemini_Generated_Image_if80coif80coif80" src="https://github.com/user-attachments/assets/565aadf5-8957-488a-9e9e-5739f9699528" />
